@@ -1,3 +1,4 @@
+#include <TimerOne.h>
 // outputs
 #define ledPin     13
 #define alarmPin   12
@@ -26,6 +27,9 @@ volatile bool prevPin0 = false;
 volatile bool prevPin1 = false;
 volatile int prevAna = 0;
 
+// blink counter
+volatile int blink_i = 0;
+
 void checkIntDiferences() {
   if ((prevPin0 =! digitalRead(intPin0)) ||
   (prevPin1 =! digitalRead(intPin1))) {
@@ -50,8 +54,8 @@ void processCommand (char c) {
   if (buffer_i > buffer_size) buffer_i=0;
   if ((buffer_i >= 2) && ((c == '\n') || (c == '\r'))) {
     buffer[buffer_i] = '\0';
-    if (memcmp("arm",    buffer, 3)==0) flagArmed=true;
-    if (memcmp("disarm", buffer, 3)==0) flagArmed=false;
+    if (memcmp("arm",    buffer, 3)==0) { flagArmed=true; }
+    if (memcmp("disarm", buffer, 3)==0) { flagArmed=false; flagAlarm=false; }
     buffer_i=0;
     for(int i=0; i<buffer_size; i++) buffer[i]=0; 
   }
@@ -67,6 +71,19 @@ void setup() {
   pinMode(intPin1, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(intPin0), checkIntDiferences, CHANGE);
   attachInterrupt(digitalPinToInterrupt(intPin1), checkIntDiferences, CHANGE);
+  Timer1.initialize(0);
+  Timer1.setPeriod(1000);
+  Timer1.start();
+  Timer1.attachInterrupt(blink);
+}
+
+void blink() {
+  digitalWrite(ledPin, LOW);
+  if ((blink_i > 100) && (blink_i < 120) && flagAlarm) digitalWrite(ledPin, HIGH);  
+  if ((blink_i > 400) && (blink_i < 420) && flagArmed) digitalWrite(ledPin, HIGH);  
+  if ((blink_i > 700) && (blink_i < 750)) digitalWrite(ledPin, HIGH);  
+  if (blink_i > 1999) blink_i = 0;
+  blink_i++;
 }
 
 void displayStatus() {
