@@ -44,7 +44,7 @@ void checkAnaDiferences() {
   }
 }
 
-void processComand (char c) {
+void processCommand (char c) {
   buffer[buffer_i] = c;
   buffer_i++;
   if (buffer_i > buffer_size) buffer_i=0;
@@ -69,11 +69,22 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(intPin1), checkIntDiferences, CHANGE);
 }
 
+void displayStatus() {
+  char display_buffer[100];
+  sprintf(display_buffer,
+    "i0: %d, i1: %d, a: %d, armed: %d, alarm: %d \n",
+    prevPin0, prevPin1, prevAna, flagArmed, flagAlarm
+  );
+  Serial.print(display_buffer);
+}
+
 void loop() {
   digitalWrite(armedPin, flagArmed);
   digitalWrite(alarmPin, flagAlarm);
   checkAnaDiferences();
+  displayStatus();
   while (Serial.available()) {
     processCommand(Serial.read());
   }
+  delay(500);
 }
