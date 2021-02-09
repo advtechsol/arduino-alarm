@@ -1,4 +1,3 @@
-#include <TimerOne.h>
 // outputs
 #define ledPin     13
 #define alarmPin   12
@@ -30,6 +29,10 @@ volatile int prevAna = 0;
 // blink counter
 volatile int blink_i = 0;
 
+// buffer to show sensorstatus  
+char display_buffer[100];
+volatile bool flagDisplay = false;
+
 void checkIntDiferences() {
   if ((prevPin0 =! digitalRead(intPin0)) ||
   (prevPin1 =! digitalRead(intPin1))) {
@@ -59,7 +62,28 @@ void processCommand (char c) {
     buffer_i=0;
     for(int i=0; i<buffer_size; i++) buffer[i]=0; 
   }
+}
 
+void blink() {
+  delay(1);
+  digitalWrite(ledPin, LOW);
+  if ((blink_i > 100) && (blink_i < 120) && flagAlarm) digitalWrite(ledPin, HIGH);  
+  if ((blink_i > 400) && (blink_i < 420) && flagArmed) digitalWrite(ledPin, HIGH);  
+  if ((blink_i > 700) && (blink_i < 750)) digitalWrite(ledPin, HIGH);  
+  if (blink_i == 0 || blink_i == 500) flagDisplay=true;
+  if (blink_i > 999) blink_i = 0;
+  blink_i++;
+}
+
+void displayStatus() {
+  if (flagDisplay) {
+    sprintf(display_buffer,
+      "i0: %d, i1: %d, a: %d, armed: %d, alarm: %d \n",
+      prevPin0, prevPin1, prevAna, flagArmed, flagAlarm
+    );
+    Serial.print(display_buffer);
+    flagDisplay=false;
+  }
 }
 
 void setup() {
@@ -71,37 +95,15 @@ void setup() {
   pinMode(intPin1, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(intPin0), checkIntDiferences, CHANGE);
   attachInterrupt(digitalPinToInterrupt(intPin1), checkIntDiferences, CHANGE);
-  Timer1.initialize(0);
-  Timer1.setPeriod(1000);
-  Timer1.start();
-  Timer1.attachInterrupt(blink);
-}
-
-void blink() {
-  digitalWrite(ledPin, LOW);
-  if ((blink_i > 100) && (blink_i < 120) && flagAlarm) digitalWrite(ledPin, HIGH);  
-  if ((blink_i > 400) && (blink_i < 420) && flagArmed) digitalWrite(ledPin, HIGH);  
-  if ((blink_i > 700) && (blink_i < 750)) digitalWrite(ledPin, HIGH);  
-  if (blink_i > 1999) blink_i = 0;
-  blink_i++;
-}
-
-void displayStatus() {
-  char display_buffer[100];
-  sprintf(display_buffer,
-    "i0: %d, i1: %d, a: %d, armed: %d, alarm: %d \n",
-    prevPin0, prevPin1, prevAna, flagArmed, flagAlarm
-  );
-  Serial.print(display_buffer);
 }
 
 void loop() {
+  blink();
   digitalWrite(armedPin, flagArmed);
   digitalWrite(alarmPin, flagAlarm);
   checkAnaDiferences();
-  displayStatus();
   while (Serial.available()) {
     processCommand(Serial.read());
   }
-  delay(500);
+  displayStatus();
 }
