@@ -4,7 +4,7 @@
 #define armedPin   11
 
 // inputs
-#define intPin0    2
+#define intPin0    4
 #define intPin1    3
 #define anaPin     A0
 
