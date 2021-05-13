@@ -100,6 +100,8 @@ void setup() {
 void loop() {
   blink();
   digitalWrite(armedPin, flagArmed);
+  digitalWrite(alarmPin, !flagAlarm); // need this to go low for <700ms
+  delay(500)
   digitalWrite(alarmPin, flagAlarm);
   checkAnaDiferences();
   while (Serial.available()) {
