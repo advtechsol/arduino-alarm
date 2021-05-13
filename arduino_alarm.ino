@@ -1,6 +1,6 @@
 // outputs
 #define ledPin     13
-#define alarmPin   12
+#define alarmPin   5
 #define armedPin   11
 
 // inputs
