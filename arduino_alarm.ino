@@ -4,7 +4,7 @@
 #define armedPin   11
 
 // inputs
-#define intPin0    4
+#define intPin0    2
 #define intPin1    3
 #define anaPin     A0
 
@@ -34,7 +34,7 @@ char display_buffer[100];
 volatile bool flagDisplay = false;
 
 void checkIntDiferences() {
-  if ((prevPin0 =! digitalRead(intPin0)) ||
+  if ((prevPin0 =!digitalRead(intPin0)) ||
   (prevPin1 =! digitalRead(intPin1))) {
     prevPin0 = digitalRead(intPin0);
     prevPin1 = digitalRead(intPin1);
@@ -93,16 +93,26 @@ void setup() {
   pinMode(armedPin, OUTPUT);
   pinMode(intPin0, INPUT_PULLUP);
   pinMode(intPin1, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(intPin0), checkIntDiferences, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(intPin1), checkIntDiferences, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(intPin0), checkIntDiferences, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(intPin1), checkIntDiferences, CHANGE);
 }
 
 void loop() {
   blink();
   digitalWrite(armedPin, flagArmed);
   digitalWrite(alarmPin, !flagAlarm); // need this to go low for <700ms
-  delay(500)
-  digitalWrite(alarmPin, flagAlarm);
+  if (flagArmed == true){
+    attachInterrupt(digitalPinToInterrupt(intPin0), checkIntDiferences, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(intPin1), checkIntDiferences, CHANGE);
+//    checkIntDiferences();
+    if (flagAlarm == true){
+    delay(500);
+    digitalWrite(alarmPin, flagAlarm);
+    delay(500);
+    digitalWrite(alarmPin, !flagAlarm);
+    flagAlarm = 0;
+   }
+}
   checkAnaDiferences();
   while (Serial.available()) {
     processCommand(Serial.read());
